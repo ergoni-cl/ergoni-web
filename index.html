@@ -1473,15 +1473,27 @@ body {
 </div>
 
 <script>
-function submitEmail() {
+async function submitEmail() {
   const val = document.getElementById('emailInput').value.trim();
   if (!val || !val.includes('@')) {
     document.getElementById('emailInput').style.borderColor = 'rgba(180,80,80,0.4)';
     return;
   }
-  console.log('Lead capturado:', val);
-  document.getElementById('captureForm').style.display = 'none';
-  document.getElementById('successMsg').style.display = 'block';
+  try {
+    const res = await fetch('https://formspree.io/f/mkoqzgwj', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: val, source: 'ergoni.cl - lista de espera' })
+    });
+    if (res.ok) {
+      document.getElementById('captureForm').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+    } else {
+      document.getElementById('emailInput').style.borderColor = 'rgba(180,80,80,0.4)';
+    }
+  } catch(e) {
+    document.getElementById('emailInput').style.borderColor = 'rgba(180,80,80,0.4)';
+  }
 }
 document.getElementById('emailInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') submitEmail();
