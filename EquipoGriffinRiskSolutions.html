@@ -509,7 +509,7 @@ async function submit(){
   var jsonStr=JSON.stringify(payload);
 
   var xhr=new XMLHttpRequest();
-  xhr.open('POST', + SCRIPT_URL + ,true);
+  xhr.open('POST','https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec',true);
   xhr.setRequestHeader('Content-Type','text/plain;charset=utf-8');
   xhr.onload=function(){
     document.getElementById('ss').style.display='none';
