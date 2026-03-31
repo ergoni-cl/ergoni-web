@@ -322,14 +322,14 @@ footer{border-top:1px solid rgba(255,255,255,.045);padding:1.1rem 1.5rem;text-al
     </div>
 
     <div class="ss" id="ss">
-      <button class="sbtn" id="sbtn" onclick="submit()">Enviar expediente al equipo de RRHH de Griffin Risk &rarr;</button>
-      <p class="snote">Al enviar confirma que los documentos son verídicos y acepta el tratamiento de sus datos personales para fines de incorporación laboral, conforme a la Ley N°19.628.</p>
+      <button class="sbtn" id="sbtn" onclick="submit()">Guardar y enviar lo que tengo hasta ahora &rarr;</button>
+      <p class="snote">Puede enviar con los documentos que tenga disponibles hoy y volver a completar los pendientes. Al enviar confirma que los documentos son verídicos y acepta el tratamiento de sus datos conforme a la Ley N°19.628.</p>
     </div>
 
     <div class="suc" id="suc">
       <div class="sc">✓</div>
       <div class="stitle">¡Expediente enviado!</div>
-      <div class="stext" style="margin-top:.4rem">El equipo de RRHH de <strong>Griffin Risk Solution</strong> revisará su documentación y se comunicará con usted a la brevedad para coordinar los próximos pasos de su incorporación al servicio SOC.<br><br>Consultas: <strong>hr@griffinrm.com</strong> · WhatsApp <strong>+56 9 8454 1319</strong></div>
+      <div class="stext" style="margin-top:.4rem">Su expediente fue recibido. Si quedaron documentos pendientes, puede volver a este portal en cualquier momento e ingresar con su RUT para completarlos.<br><br>Consultas: <strong>equipogriffin@ergoni.cl</strong> · WhatsApp <strong>+56 9 8454 1319</strong></div>
     </div>
 
   </div>
@@ -466,7 +466,7 @@ async function submit(){
   const missing=REQ.filter(id=>!state[id]);
   if(missing.length>0){
     const L={cedula:'Cédula de identidad',nacimiento:'Cert. nacimiento',residencia:'Cert. residencia',licencia:'Licencia de conducir',titulo:'Formación académica',cv:'Currículum vitae',afp:'Cert. AFP',salud:'Cert. salud',banco:'Cert. bancario',antecedentes:'Cert. antecedentes',deuda:'Cert. deuda CMF'};
-    notif('Faltan documentos obligatorios',missing.map(id=>L[id]).join(', '),true);return;
+    notif('Documentos pendientes',missing.map(id=>L[id]).join(', ')+' — se guardarán como pendientes.',false);
   }
   const rut=document.getElementById('rutInput').value.trim().toUpperCase();
   const w=W[rut];
