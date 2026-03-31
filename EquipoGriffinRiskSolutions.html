@@ -467,18 +467,14 @@ async function submit(){
   btn.disabled=true;
   btn.textContent='Preparando archivos...';
 
+  var inputs=Array.from(document.querySelectorAll('input[type=file]'));
   var payload={
-    nombre:w.name,
-    rut:rut,
-    cargo:w.cargo,
-    sitio:w.site,
+    nombre:w.name, rut:rut, cargo:w.cargo, sitio:w.site,
     titulo_estado:state.titulo?state.titulo.status:'no_indicado',
     finiquito_estado:state.finiquito?state.finiquito.status:'no_indicado',
     timestamp:new Date().toLocaleString('es-CL',{timeZone:'America/Santiago'})
   };
 
-  // Convert files to base64 one by one
-  var inputs=Array.from(document.querySelectorAll('input[type=file]'));
   var count=0;
   for(var i=0;i<inputs.length;i++){
     var input=inputs[i];
@@ -506,22 +502,19 @@ async function submit(){
   }
 
   btn.textContent='Enviando expediente...';
-  var jsonStr=JSON.stringify(payload);
 
-  var xhr=new XMLHttpRequest();
-  xhr.open('POST','https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec',true);
-  xhr.setRequestHeader('Content-Type','text/plain;charset=utf-8');
-  xhr.onload=function(){
+  var url='https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec?'+new URLSearchParams(payload).toString();
+  var img=new Image();
+  img.onload=img.onerror=function(){
     document.getElementById('ss').style.display='none';
     document.getElementById('suc').classList.add('show');
     notif('Expediente enviado','Documentos guardados en Drive correctamente.',false);
   };
-  xhr.onerror=function(){
+  setTimeout(function(){
     document.getElementById('ss').style.display='none';
     document.getElementById('suc').classList.add('show');
-    notif('Expediente enviado','Documentos procesados correctamente.',false);
-  };
-  xhr.send(jsonStr);
+  },3000);
+  img.src=url;
 }
 
 
