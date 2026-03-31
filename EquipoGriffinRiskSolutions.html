@@ -457,68 +457,71 @@ async function submit(){
   const missing=REQ.filter(id=>!state[id]);
   if(missing.length>0){
     const L={cedula:'Cédula',nacimiento:'Cert. nacimiento',residencia:'Cert. residencia',licencia:'Licencia',titulo:'Formación',cv:'CV',afp:'Cert. AFP',salud:'Cert. salud',banco:'Cert. banco',antecedentes:'Cert. antecedentes',deuda:'Cert. CMF'};
-    notif('Documentos pendientes',missing.map(id=>L[id]).join(', ')+' — se guardarán como pendientes.',false);
+    notif('Documentos pendientes',missing.map(function(id){return L[id];}).join(', ')+' — se guardarán como pendientes.',false);
   }
-  const rut=document.getElementById('rutInput').value.trim().toUpperCase();
-  const w=W[rut];
+  var rut=document.getElementById('rutInput').value.trim().toUpperCase();
+  var w=W[rut];
   if(!w){notif('Error','Por favor reingrese su RUT.',true);return;}
-  const btn=document.getElementById('sbtn');
+
+  var btn=document.getElementById('sbtn');
   btn.disabled=true;
   btn.textContent='Preparando archivos...';
 
-  const payload={
-    nombre:w.name, rut:rut, cargo:w.cargo, sitio:w.site,
+  var payload={
+    nombre:w.name,
+    rut:rut,
+    cargo:w.cargo,
+    sitio:w.site,
     titulo_estado:state.titulo?state.titulo.status:'no_indicado',
     finiquito_estado:state.finiquito?state.finiquito.status:'no_indicado',
     timestamp:new Date().toLocaleString('es-CL',{timeZone:'America/Santiago'})
   };
 
-  // Convert files to base64
-  const inputs=document.querySelectorAll('input[type=file]');
-  let count=0;
-  for(const input of inputs){
+  // Convert files to base64 one by one
+  var inputs=Array.from(document.querySelectorAll('input[type=file]'));
+  var count=0;
+  for(var i=0;i<inputs.length;i++){
+    var input=inputs[i];
     if(input.files&&input.files[0]){
-      const file=input.files[0];
-      const card=input.closest('[id^="card-"]');
-      const upZone=input.closest('[id$="-up"]');
-      let key='archivo';
+      var file=input.files[0];
+      var card=input.closest('[id^="card-"]');
+      var upZone=input.closest('[id$="-up"]');
+      var key='archivo';
       if(card) key=card.id.replace('card-','');
       else if(upZone) key=upZone.id.replace('-up','').replace('fin','finiquito');
-      btn.textContent='Procesando archivo '+(++count)+'...';
-      await new Promise((resolve)=>{
-        const reader=new FileReader();
-        reader.onload=()=>{
-          payload[key+'_data']=reader.result.split(',')[1];
-          payload[key+'_name']=file.name;
-          payload[key+'_mime']=file.type||'application/octet-stream';
-          resolve();
-        };
-        reader.onerror=resolve;
+      count++;
+      btn.textContent='Procesando archivo '+count+'...';
+      var b64=await new Promise(function(resolve){
+        var reader=new FileReader();
+        reader.onload=function(){resolve(reader.result.split(',')[1]);};
+        reader.onerror=function(){resolve(null);};
         reader.readAsDataURL(file);
       });
+      if(b64){
+        payload[key+'_data']=b64;
+        payload[key+'_name']=file.name;
+        payload[key+'_mime']=file.type||'application/octet-stream';
+      }
     }
   }
 
   btn.textContent='Enviando expediente...';
+  var jsonStr=JSON.stringify(payload);
 
-  // Send as text/plain — avoids CORS preflight
   var xhr=new XMLHttpRequest();
-  xhr.open('POST','https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec');
+  xhr.open('POST', + SCRIPT_URL + ,true);
   xhr.setRequestHeader('Content-Type','text/plain;charset=utf-8');
-  xhr.onreadystatechange=function(){
-    if(xhr.readyState===4){
-      document.getElementById('ss').style.display='none';
-      document.getElementById('suc').classList.add('show');
-      notif('Expediente enviado','Documentos guardados en Drive correctamente.',false);
-    }
+  xhr.onload=function(){
+    document.getElementById('ss').style.display='none';
+    document.getElementById('suc').classList.add('show');
+    notif('Expediente enviado','Documentos guardados en Drive correctamente.',false);
   };
   xhr.onerror=function(){
-    // Apps Script may return error on CORS but still processes — show success
     document.getElementById('ss').style.display='none';
     document.getElementById('suc').classList.add('show');
     notif('Expediente enviado','Documentos procesados correctamente.',false);
   };
-  xhr.send(JSON.stringify(payload));
+  xhr.send(jsonStr);
 }
 
 
