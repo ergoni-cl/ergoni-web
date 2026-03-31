@@ -453,19 +453,81 @@ function updateProg(){
   document.getElementById('pf').style.width=Math.min(pct,100)+'%';
 }
 
-function submit(){
+function toBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result.split(',')[1]);
+    r.onerror=reject;
+    r.readAsDataURL(file);
+  });
+}
+
+async function submit(){
   const missing=REQ.filter(id=>!state[id]);
   if(missing.length>0){
     const L={cedula:'Cédula de identidad',nacimiento:'Cert. nacimiento',residencia:'Cert. residencia',licencia:'Licencia de conducir',titulo:'Formación académica',cv:'Currículum vitae',afp:'Cert. AFP',salud:'Cert. salud',banco:'Cert. bancario',antecedentes:'Cert. antecedentes',deuda:'Cert. deuda CMF'};
     notif('Faltan documentos obligatorios',missing.map(id=>L[id]).join(', '),true);return;
   }
+  const rut=document.getElementById('rutInput').value.trim().toUpperCase();
+  const w=W[rut];
+  if(!w){notif('Error','Por favor reingrese su RUT e intente nuevamente.',true);return;}
+
   const btn=document.getElementById('sbtn');
-  btn.disabled=true;btn.textContent='Enviando expediente...';
-  setTimeout(()=>{
-    document.getElementById('ss').style.display='none';
-    document.getElementById('suc').classList.add('show');
-    notif('¡Expediente enviado!','El equipo de RRHH lo revisará a la brevedad.',false);
-  },1400);
+  btn.disabled=true;
+  btn.textContent='Preparando archivos...';
+
+  const docIds=['cedula','nacimiento','residencia','licencia','titulo','cv','afp','salud','banco','antecedentes','deuda','finiquito'];
+  const payload={
+    nombre: w.name,
+    rut: rut,
+    cargo: w.cargo,
+    sitio: w.site,
+    titulo_estado: state.titulo ? state.titulo.status : 'no_indicado',
+    finiquito_estado: state.finiquito ? state.finiquito.status : 'no_indicado',
+    timestamp: new Date().toLocaleString('es-CL',{timeZone:'America/Santiago'})
+  };
+
+  // Convert each file to base64
+  const inputs=document.querySelectorAll('input[type=file]');
+  let count=0;
+  for(const input of inputs){
+    if(input.files&&input.files[0]){
+      const file=input.files[0];
+      const card=input.closest('[id]');
+      const key=card?card.id.replace('card-','').replace('-up','').replace('titulo-','titulo').replace('fin-','finiquito'):'archivo';
+      try{
+        btn.textContent='Procesando archivos ('+(++count)+')...';
+        const b64=await toBase64(file);
+        payload[key+'_data']=b64;
+        payload[key+'_name']=file.name;
+        payload[key+'_mime']=file.type||'application/octet-stream';
+      }catch(err){console.warn('Error reading file',key,err);}
+    }
+  }
+
+  btn.textContent='Enviando expediente...';
+
+  fetch('https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec',{
+    method:'POST',
+    body: JSON.stringify(payload),
+    headers:{'Content-Type':'application/json'}
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.result==='ok'){
+      document.getElementById('ss').style.display='none';
+      document.getElementById('suc').classList.add('show');
+      notif('¡Expediente enviado!','Los documentos quedaron guardados en Drive.',false);
+    } else {
+      throw new Error(d.message||'Error en el servidor');
+    }
+  })
+  .catch(err=>{
+    btn.disabled=false;
+    btn.textContent='Enviar expediente al equipo de RRHH de Griffin Risk →';
+    notif('Error al enviar','Intente nuevamente o escriba a equipogriffin@ergoni.cl',true);
+    console.error(err);
+  });
 }
 
 function notif(title,msg,isErr){
