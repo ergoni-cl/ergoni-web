@@ -468,7 +468,7 @@ async function submit(){
   btn.textContent='Preparando archivos...';
 
   var inputs=Array.from(document.querySelectorAll('input[type=file]'));
-  var payload={
+  var params={
     nombre:w.name, rut:rut, cargo:w.cargo, sitio:w.site,
     titulo_estado:state.titulo?state.titulo.status:'no_indicado',
     finiquito_estado:state.finiquito?state.finiquito.status:'no_indicado',
@@ -494,27 +494,31 @@ async function submit(){
         reader.readAsDataURL(file);
       });
       if(b64){
-        payload[key+'_data']=b64;
-        payload[key+'_name']=file.name;
-        payload[key+'_mime']=file.type||'application/octet-stream';
+        params[key+'_data']=b64;
+        params[key+'_name']=file.name;
+        params[key+'_mime']=file.type||'application/octet-stream';
       }
     }
   }
 
   btn.textContent='Enviando expediente...';
 
-  var url='https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec?'+new URLSearchParams(payload).toString();
-  var img=new Image();
-  img.onload=img.onerror=function(){
-    document.getElementById('ss').style.display='none';
-    document.getElementById('suc').classList.add('show');
-    notif('Expediente enviado','Documentos guardados en Drive correctamente.',false);
-  };
+  // Build GET URL and use iframe to avoid CORS and page navigation
+  var qs=Object.keys(params).map(function(k){
+    return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
+  }).join('&');
+
+  var iframe=document.createElement('iframe');
+  iframe.style.display='none';
+  iframe.src='https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec?'+qs;
+  document.body.appendChild(iframe);
+
+  // Show success after 2 seconds
   setTimeout(function(){
     document.getElementById('ss').style.display='none';
     document.getElementById('suc').classList.add('show');
-  },3000);
-  img.src=url;
+    notif('Expediente enviado','Documentos guardados en Drive correctamente.',false);
+  },2000);
 }
 
 
