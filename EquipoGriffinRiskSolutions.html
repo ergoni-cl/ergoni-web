@@ -173,7 +173,7 @@ footer{border-top:1px solid rgba(255,255,255,.045);padding:1.1rem 1.5rem;text-al
   <div style="margin-bottom:1.75rem">
     <div class="sl">Paso 1 — Identificación</div>
     <div class="st">Ingrese su RUT</div>
-    <div class="sd">Sin puntos, con guión. Ejemplo: 19019441-8 &nbsp;·&nbsp; Si tiene K al final, ingrésela en mayúscula.</div>
+    <div class="sd">Sin puntos, con guión. Ejemplo: 12345678-9 &nbsp;·&nbsp; Si tiene K al final, ingrésela en mayúscula.</div>
     <div class="riw">
       <input type="text" class="ri" id="rutInput" placeholder="12345678-9" maxlength="10" oninput="fmtRut(this)" onkeydown="if(event.key==='Enter')checkRut()">
       <button class="rbtn" onclick="checkRut()">Continuar &rarr;</button>
@@ -380,7 +380,7 @@ function checkRut(){
   const el=document.getElementById('rutInput');
   const err=document.getElementById('rutErr');
   if(!raw||!raw.includes('-')){
-    el.classList.add('err');err.textContent='Formato inválido. Ingrese RUT con guión (ej: 19019441-8)';err.style.display='block';return;
+    el.classList.add('err');err.textContent='Formato inválido. Ingrese RUT con guión (ej: 12345678-9)';err.style.display='block';return;
   }
   const w=W[raw];
   if(!w){
@@ -503,7 +503,7 @@ async function submit(){
 
   // Send as text/plain — avoids CORS preflight
   var xhr=new XMLHttpRequest();
-  xhr.open('POST', + SCRIPT_URL + );
+  xhr.open('POST','https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec');
   xhr.setRequestHeader('Content-Type','text/plain;charset=utf-8');
   xhr.onreadystatechange=function(){
     if(xhr.readyState===4){
