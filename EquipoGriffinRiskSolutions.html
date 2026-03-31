@@ -510,7 +510,7 @@ async function submit(){
   fetch('https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec',{
     method:'POST',
     body: JSON.stringify(payload),
-    headers:{'Content-Type':'application/json'}
+    mode:'no-cors'
   })
   .then(r=>r.json())
   .then(d=>{
