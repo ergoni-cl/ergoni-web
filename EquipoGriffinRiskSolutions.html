@@ -467,14 +467,9 @@ async function submit(){
   btn.disabled=true;
   btn.textContent='Preparando archivos...';
 
+  // Convert files to base64
   var inputs=Array.from(document.querySelectorAll('input[type=file]'));
-  var params={
-    nombre:w.name, rut:rut, cargo:w.cargo, sitio:w.site,
-    titulo_estado:state.titulo?state.titulo.status:'no_indicado',
-    finiquito_estado:state.finiquito?state.finiquito.status:'no_indicado',
-    timestamp:new Date().toLocaleString('es-CL',{timeZone:'America/Santiago'})
-  };
-
+  var fileParams={};
   var count=0;
   for(var i=0;i<inputs.length;i++){
     var input=inputs[i];
@@ -494,31 +489,51 @@ async function submit(){
         reader.readAsDataURL(file);
       });
       if(b64){
-        params[key+'_data']=b64;
-        params[key+'_name']=file.name;
-        params[key+'_mime']=file.type||'application/octet-stream';
+        fileParams[key+'_data']=b64;
+        fileParams[key+'_name']=file.name;
+        fileParams[key+'_mime']=file.type||'application/octet-stream';
       }
     }
   }
 
   btn.textContent='Enviando expediente...';
 
-  // Build GET URL and use iframe to avoid CORS and page navigation
-  var qs=Object.keys(params).map(function(k){
-    return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
-  }).join('&');
+  // Build params
+  var params=Object.assign({
+    nombre:w.name, rut:rut, cargo:w.cargo, sitio:w.site,
+    titulo_estado:state.titulo?state.titulo.status:'no_indicado',
+    finiquito_estado:state.finiquito?state.finiquito.status:'no_indicado',
+    timestamp:new Date().toLocaleString('es-CL',{timeZone:'America/Santiago'})
+  }, fileParams);
 
-  var iframe=document.createElement('iframe');
-  iframe.style.display='none';
-  iframe.src='https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec?'+qs;
-  document.body.appendChild(iframe);
+  // Send via form POST to script URL — most reliable cross-origin method
+  var form=document.createElement('form');
+  form.method='POST';
+  form.action='https://script.google.com/macros/s/AKfycby4Bh6Aaqd4hXHa0Dd0zriwuNxq4BXUtKBdfBqDwFf3ak1wvCZkNdGwnNsMGBcOAOrT/exec';
+  form.target='hidden_frame';
+  form.style.display='none';
 
-  // Show success after 2 seconds
+  for(var k in params){
+    var input=document.createElement('input');
+    input.type='hidden';
+    input.name=k;
+    input.value=params[k];
+    form.appendChild(input);
+  }
+
+  var frame=document.createElement('iframe');
+  frame.name='hidden_frame';
+  frame.style.display='none';
+  document.body.appendChild(frame);
+  document.body.appendChild(form);
+  form.submit();
+
   setTimeout(function(){
     document.getElementById('ss').style.display='none';
     document.getElementById('suc').classList.add('show');
     notif('Expediente enviado','Documentos guardados en Drive correctamente.',false);
-  },2000);
+    btn.textContent='Expediente enviado';
+  },3000);
 }
 
 
